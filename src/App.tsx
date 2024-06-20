@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 // import logo from "./logo.svg";
 import "./App.css";
 import { FilterType, TaskType } from "./types";
@@ -39,6 +39,8 @@ function App() {
 
   useLayoutEffect(() => {
     getTodosFromApi();
+
+    // create_local_storage();
   }, []);
 
   // Sauvegarde des tâches dans le stockage local
@@ -93,9 +95,6 @@ function App() {
 
   return (
     <section className="container pt-5" id="todolist">
-      <h2 style={{ marginBottom: "20px", textAlign: "center" }}>
-        Welcome to our Todo app
-      </h2>
       <form className="d-flex pb-4">
         <input
           required={true}
@@ -110,7 +109,6 @@ function App() {
           id="add_task"
           className="btn btn-primary"
           onClick={(event: React.FormEvent) => submitTodo(event)}
-          style={{ marginLeft: 10 }}
         >
           Ajouter
         </button>
@@ -156,6 +154,17 @@ function App() {
               />
             );
           })}
+
+          {/* <!--   <li className="todo list-group-item d-flex align-items-center">
+              <input className="form-check-input" type="checkbox" id="todo-1"/>
+              <label className="ms-2 form-check-label" for="todo-1">
+                  Tâche à faire 2
+              </label>
+              <label className="ms-auto btn btn-danger btn-sm">
+              <i className="bi-trash">
+              </i>
+              </label>
+          </li> --> */}
         </ul>
       </main>
     </section>
