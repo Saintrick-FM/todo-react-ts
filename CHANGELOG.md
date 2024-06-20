@@ -1,3 +1,13 @@
+## 0.5.0 (2024-06-20)
+
+### BREAKING CHANGE
+
+- fake breaking changes
+
+### Perf
+
+- resolved conflicts
+
 ## 0.4.0 (2024-06-20)
 
 ### BREAKING CHANGE
