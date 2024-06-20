@@ -109,6 +109,7 @@ function App() {
           id="add_task"
           className="btn btn-primary"
           onClick={(event: React.FormEvent) => submitTodo(event)}
+          style={{ marginLeft: 10 }}
         >
           Ajouter
         </button>
