@@ -42,13 +42,13 @@ function App() {
   }, []);
 
   // Sauvegarde des tâches dans le stockage local
-  function create_local_storage() {
-    if (items && items.length > 0) {
-      localStorage.setItem("todos", JSON.stringify(items));
-      return;
-    }
-    localStorage.setItem("todos", JSON.stringify([]));
-  }
+  // function create_local_storage() {
+  //   if (items && items.length > 0) {
+  //     localStorage.setItem("todos", JSON.stringify(items));
+  //     return;
+  //   }
+  //   localStorage.setItem("todos", JSON.stringify([]));
+  // }
   const filterTodos = (typeOfFilter: FilterType) => {
     let reinitialedItems = JSON.parse(
       localStorage.getItem("todos") as string
