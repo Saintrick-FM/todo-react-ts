@@ -95,6 +95,9 @@ function App() {
 
   return (
     <section className="container pt-5" id="todolist">
+      <h2 style={{ marginBottom: "20px", textAlign: "center" }}>
+        Welcome to our Todo app
+      </h2>
       <form className="d-flex pb-4">
         <input
           required={true}
@@ -155,17 +158,6 @@ function App() {
               />
             );
           })}
-
-          {/* <!--   <li className="todo list-group-item d-flex align-items-center">
-              <input className="form-check-input" type="checkbox" id="todo-1"/>
-              <label className="ms-2 form-check-label" for="todo-1">
-                  Tâche à faire 2
-              </label>
-              <label className="ms-auto btn btn-danger btn-sm">
-              <i className="bi-trash">
-              </i>
-              </label>
-          </li> --> */}
         </ul>
       </main>
     </section>
