@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 // import logo from "./logo.svg";
 import "./App.css";
 import { FilterType, TaskType } from "./types";
@@ -39,8 +39,6 @@ function App() {
 
   useLayoutEffect(() => {
     getTodosFromApi();
-
-    // create_local_storage();
   }, []);
 
   // Sauvegarde des tâches dans le stockage local
