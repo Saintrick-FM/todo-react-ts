@@ -7,7 +7,6 @@ import SingleTodo from "./components/SingleTodo";
 function App() {
   //  data-com.bitwarden.browser.user-edited="yes"
   const [items, setItems] = useState<TaskType[]>([]);
-
   const inputTodo = useRef<any>("");
 
   const getTodosFromApi = async () => {
@@ -21,7 +20,6 @@ function App() {
     }
     return [];
   };
-
   const addTodoToApi = async (todo: TaskType) => {
     const result = await (
       await fetch("https://dummyjson.com/todos/add", {
@@ -36,11 +34,9 @@ function App() {
       setItems(result?.todos);
     }
   };
-
   useLayoutEffect(() => {
     getTodosFromApi();
   }, []);
-
   // Sauvegarde des tâches dans le stockage local
   // function create_local_storage() {
   //   if (items && items.length > 0) {
