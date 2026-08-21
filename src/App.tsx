@@ -3,77 +3,49 @@ import FormulaireAjout from "./components/FormulaireAjout";
 import Filtres from "./components/Filtres";
 import ListeTaches from "./components/ListeTaches";
 import EtatVide from "./components/EtatVide";
-import Stats from "./components/Stats";
+import * as Taches from "./lib/taches";
 import type { Filtre, Tache } from "./types";
 
 /* ==========================================================================
-   POINT DE DÉPART.
+   ÉTAPE 1 — L'ÉTAT ET LES LISTES
 
-   L'interface est terminée et ne demande aucun travail : les composants de
-   src/components/ sont écrits, la feuille de style aussi. Ils attendent
-   simplement qu'on leur passe des données et des fonctions.
+   L'application vit : on peut ajouter, cocher, renommer et supprimer.
+   Rien n'est encore filtré ni enregistré — ce sont les étapes 2 et 3.
 
-   Ton travail est ailleurs — dans la LOGIQUE :
-     src/lib/taches.ts        les règles      (étapes 1 et 2)
-     src/hooks/useStockageLocal.ts  la persistance  (étape 3)
-     src/hooks/useTaches.ts   l'état de l'app  (étape 4)
-     src/App.tsx              ce fichier, à brancher au fur et à mesure
+   Ce qu'il faut retenir de cette étape :
 
-   Les données ci-dessous sont FIGÉES, juste pour que tu voies l'interface
-   telle qu'elle doit fonctionner. Rien ne réagit encore.
+   1. UNE SEULE SOURCE DE VÉRITÉ
+      `taches` est la donnée. Tout le reste s'affiche à partir d'elle.
 
-   Vérifie ta progression avec :   npm run test:watch
+   2. LES ACTIONS NE CONTIENNENT PAS DE RÈGLES
+      Chaque gestionnaire délègue à lib/taches.ts et range le résultat.
+      La règle est écrite une fois, testée une fois.
+
+   3. LA FORME FONCTION DU SETTER
+      `setTaches(precedentes => ...)` plutôt que `setTaches(f(taches))`.
+      On part ainsi toujours de la valeur la plus récente, même si plusieurs
+      mises à jour s'enchaînent dans le même cycle. Prends le réflexe tout de
+      suite : la différence est invisible ici, décisive plus tard.
    ========================================================================== */
 
-const DONNEES_DEMO: Tache[] = [
-  {
-    id: "demo-1",
-    titre: "Remplacer ces données figées par un vrai état",
-    faite: false,
-    creeeLe: "2026-01-01T10:00:00.000Z",
-  },
-  {
-    id: "demo-2",
-    titre: "Implémenter les fonctions de src/lib/taches.ts",
-    faite: false,
-    creeeLe: "2026-01-01T09:00:00.000Z",
-  },
-  {
-    id: "demo-3",
-    titre: "Lire les commentaires — ils expliquent chaque piège",
-    faite: true,
-    creeeLe: "2026-01-01T08:00:00.000Z",
-  },
-];
-
 export default function App() {
-  /* Étape 1 : remplace DONNEES_DEMO par un vrai état, et branche les actions
-     sur les fonctions de lib/taches.ts.
-     Étape 4 : tout ceci disparaîtra au profit d'une seule ligne —
-     const { ... } = useTaches(); */
-  const [taches] = useState<Tache[]>(DONNEES_DEMO);
+  const [taches, setTaches] = useState<Tache[]>([]);
+
+  // Le filtre existe déjà dans l'état, mais il ne filtre encore rien.
+  // On le branchera à l'étape 2 — c'est le cœur de la prochaine leçon.
   const [filtre, setFiltre] = useState<Filtre>("toutes");
 
   return (
     <main className="app">
       <h1 className="app__titre">Mes tâches</h1>
       <p className="app__sous-titre">
-        Tout est enregistré dans ton navigateur. Recharge la page pour vérifier.
+        Étape 1 : la liste fonctionne. Elle n'est pas encore enregistrée —
+        recharge la page et tout disparaît.
       </p>
 
-      <div className="aide">
-        <p className="aide__titre">Point de départ de l'atelier</p>
-        <p>
-          L'interface est prête. Les données affichées sont figées et rien ne
-          réagit encore. Ouvre <code>src/lib/taches.ts</code> et lance{" "}
-          <code>npm run test:watch</code> : les tests décrivent exactement ce que
-          tu dois écrire. Supprime ce bandeau quand l'application vit.
-        </p>
-      </div>
-
-      {/* onAjouter attend une fonction (titre: string) => void.
-          Pour l'instant on lui en passe une qui ne fait rien. */}
-      <FormulaireAjout onAjouter={() => {}} />
+      <FormulaireAjout
+        onAjouter={(titre) => setTaches((p) => Taches.ajouter(p, titre))}
+      />
 
       <Filtres actif={filtre} onChanger={setFiltre} />
 
@@ -85,13 +57,12 @@ export default function App() {
       ) : (
         <ListeTaches
           taches={taches}
-          onBasculer={() => {}}
-          onSupprimer={() => {}}
+          onBasculer={(id) => setTaches((p) => Taches.basculer(p, id))}
+          onSupprimer={(id) => setTaches((p) => Taches.supprimer(p, id))}
+          /* renommer arrive à l'étape 2 : la fonction n'est pas encore écrite. */
           onRenommer={() => {}}
         />
       )}
-
-      <Stats restantes={2} faites={1} onViderFaites={() => {}} />
     </main>
   );
 }

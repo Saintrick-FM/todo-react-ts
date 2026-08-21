@@ -1,77 +1,84 @@
 import type { Filtre, Tache } from "../types";
 
 /* ==========================================================================
-   LA LOGIQUE MÉTIER — C'EST ICI QUE TU COMMENCES.
+   LA LOGIQUE MÉTIER, EN FONCTIONS PURES.
 
-   Toutes les fonctions de ce fichier sont PURES :
-     • mêmes entrées → mêmes sorties, toujours ;
-     • aucun effet de bord : elles ne touchent ni au DOM, ni au stockage,
-       et surtout elles NE MODIFIENT PAS leurs arguments.
+   Aucun import de React dans ce fichier. C'est délibéré, et c'est le choix
+   d'architecture le plus important du projet.
 
-   Aucun import de React ici. C'est volontaire : ces règles doivent pouvoir
-   être testées sans navigateur et sans composant monté.
+   Une fonction PURE, c'est :
+     1. mêmes entrées → mêmes sorties, toujours ;
+     2. aucun effet de bord (elle ne touche ni au DOM, ni au stockage,
+        ni au réseau, et ne modifie pas ses arguments).
 
-   ┌─ COMMENT TRAVAILLER ────────────────────────────────────────────────┐
-   │ Le fichier taches.test.ts contient déjà les 19 tests qui décrivent   │
-   │ le comportement attendu. Ils sont ROUGES pour l'instant.             │
-   │                                                                      │
-   │   npm run test:watch                                                 │
-   │                                                                      │
-   │ Implémente une fonction, regarde son test passer au vert, continue.  │
-   │ Les tests sont ta spécification : ils te disent quoi faire, et te    │
-   │ préviennent quand tu casses ce qui marchait.                         │
-   └──────────────────────────────────────────────────────────────────────┘
+   Ce que ça t'apporte concrètement :
+     • testable en une ligne, sans navigateur ni composant monté ;
+     • réutilisable ailleurs — en semaine 5, ces règles descendront côté
+       serveur presque telles quelles ;
+     • lisible : les règles du produit sont rassemblées ici, pas éparpillées
+       dans six composants.
+
+   Regarde src/lib/taches.test.ts : c'est parce que ces fonctions sont pures
+   que les tests tiennent en quelques lignes.
    ========================================================================== */
 
 /**
- * Crée une tâche à partir d'un titre.
+ * Crée une tâche.
  *
- * ATTENTION à l'identifiant. `taches.length + 1` semble suffire, mais :
- * supprime la tâche du milieu, ajoute-en une nouvelle, et tu recrées un
- * identifiant déjà pris. Deux tâches partagent alors le même id, et cocher
- * l'une coche l'autre.
- * Cherche `crypto.randomUUID` dans la doc MDN.
+ * `crypto.randomUUID()` produit un identifiant unique, disponible nativement
+ * dans tous les navigateurs modernes.
  *
- * Pense aussi à nettoyer les espaces autour du titre.
+ * Surtout PAS `id: taches.length + 1` : supprime la tâche du milieu, ajoute-en
+ * une nouvelle, et tu recrées un identifiant déjà pris. Deux tâches partagent
+ * alors le même id — et cocher l'une coche l'autre.
  */
 export function creerTache(titre: string): Tache {
-  throw new Error("À implémenter — étape 1");
+  return {
+    id: crypto.randomUUID(),
+    titre: titre.trim(),
+    faite: false,
+    creeeLe: new Date().toISOString(),
+  };
 }
 
 /**
  * Ajoute une tâche et renvoie un NOUVEAU tableau.
  *
- * Le réflexe naturel est `taches.push(tache)`. Écris-le, lance l'application,
- * et observe : la donnée change, l'écran non.
- *
- * Raison : `push` modifie le tableau existant, donc la variable pointe
- * toujours vers le même objet en mémoire. React compare les références (===)
- * pour décider s'il doit refaire le rendu. Même référence → il en conclut que
- * rien n'a changé.
- *
- * Il te faut un tableau NEUF. Cherche l'opérateur de décomposition (`...`).
+ * ┌─ POURQUOI PAS `taches.push(tache)` ? ─────────────────────────────────┐
+ * │ `push` modifie le tableau existant : la variable pointe toujours vers │
+ * │ le même objet en mémoire. React compare les références (===) pour     │
+ * │ décider s'il doit refaire le rendu. Même référence → il en conclut    │
+ * │ que rien n'a changé → l'écran ne bouge pas.                           │
+ * │                                                                       │
+ * │ Le symptôme est déroutant : la donnée EST bien modifiée (un           │
+ * │ console.log le confirme), mais l'affichage l'ignore.                  │
+ * │                                                                       │
+ * │ `[...taches, tache]` crée un tableau neuf, donc une nouvelle          │
+ * │ référence, donc un nouveau rendu.                                     │
+ * └───────────────────────────────────────────────────────────────────────┘
  */
 export function ajouter(taches: Tache[], titre: string): Tache[] {
-  throw new Error("À implémenter — étape 1");
+  return [...taches, creerTache(titre)];
 }
 
 /**
  * Inverse l'état « faite » d'une tâche.
  *
- * Même règle : on ne modifie rien sur place. `map` reconstruit le tableau.
- * Pour la tâche visée, renvoie une COPIE modifiée (`{ ...t, faite: ... }`).
- * Pour les autres, renvoie l'objet d'origine tel quel.
+ * `map` reconstruit le tableau. Pour la tâche visée on renvoie une copie
+ * modifiée (`{ ...t, faite: !t.faite }`), pour les autres on renvoie l'objet
+ * d'origine inchangé — ce qui permet à React d'éviter de re-rendre les lignes
+ * qui n'ont pas bougé.
  */
 export function basculer(taches: Tache[], id: string): Tache[] {
-  throw new Error("À implémenter — étape 1");
+  return taches.map((t) => (t.id === id ? { ...t, faite: !t.faite } : t));
 }
 
 /** Supprime une tâche. `filter` renvoie naturellement un nouveau tableau. */
 export function supprimer(taches: Tache[], id: string): Tache[] {
-  throw new Error("À implémenter — étape 1");
+  return taches.filter((t) => t.id !== id);
 }
 
-/** Renomme une tâche. Un titre vide doit être ignoré, pas enregistré. */
+/** Renomme une tâche. Un titre vide est ignoré plutôt que d'être enregistré. */
 export function renommer(taches: Tache[], id: string, titre: string): Tache[] {
   throw new Error("À implémenter — étape 2");
 }
@@ -82,33 +89,35 @@ export function viderFaites(taches: Tache[]): Tache[] {
 }
 
 /**
- * Applique un filtre et renvoie la liste à afficher.
+ * Applique un filtre.
  *
- * ┌─ LE PIÈGE PRINCIPAL DU PROJET ──────────────────────────────────────┐
- * │ Cette fonction CALCULE la liste visible. On ne la stockera jamais    │
- * │ dans un état.                                                        │
- * │                                                                      │
- * │ La tentation sera d'écrire, dans App.tsx :                           │
- * │   const [tachesVisibles, setTachesVisibles] = useState([])           │
- * │ et de la remplir à chaque changement de filtre. Ça crée une DEUXIÈME │
- * │ source de vérité, qui se désynchronise dès que la première change.   │
- * │                                                                      │
- * │ Tu peux voir le résultat en action sur la branche `revue-de-code`.   │
- * │                                                                      │
- * │ Règle : une valeur qui peut se DÉDUIRE d'autres valeurs ne doit pas  │
- * │ vivre dans un état. On la recalcule.                                 │
- * └──────────────────────────────────────────────────────────────────────┘
+ * ┌─ LE PIÈGE N°1 DE CE PROJET ───────────────────────────────────────────┐
+ * │ Cette fonction CALCULE la liste visible. On ne la stocke jamais.      │
+ * │                                                                       │
+ * │ La tentation est d'écrire `const [tachesVisibles, setTachesVisibles]  │
+ * │ = useState([])` et de la remplir à chaque changement de filtre. Ça     │
+ * │ crée une deuxième source de vérité, qui se désynchronise dès que la   │
+ * │ première change.                                                      │
+ * │                                                                       │
+ * │ Le scénario réel : on filtre sur « À faire », puis on ajoute une      │
+ * │ tâche à partir de la liste filtrée — et toutes les tâches terminées   │
+ * │ disparaissent. Perte de données pure et simple.                       │
+ * │                                                                       │
+ * │ Règle générale : si une valeur peut se DÉDUIRE d'autres valeurs,      │
+ * │ elle ne doit pas vivre dans un état. On la recalcule.                 │
+ * └───────────────────────────────────────────────────────────────────────┘
  */
 export function filtrer(taches: Tache[], filtre: Filtre): Tache[] {
   throw new Error("À implémenter — étape 2");
 }
 
 /**
- * Compte les tâches par état, en UNE seule passe.
+ * Compte les tâches par état.
  *
- * Tu peux écrire deux `filter().length`. Fais-le d'abord si ça t'aide.
- * Puis réécris-le avec `reduce` : c'est exactement le cas où `reduce` est le
- * bon outil — réduire une liste à UNE valeur agrégée.
+ * `reduce` en une seule passe plutôt que deux `filter().length`.
+ * Sur trente tâches la différence est nulle — l'intérêt ici est de
+ * comprendre `reduce` sur un cas où il est réellement le bon outil :
+ * réduire une liste à UNE valeur agrégée.
  */
 export function compter(taches: Tache[]): { total: number; faites: number; restantes: number } {
   throw new Error("À implémenter — étape 2");
@@ -117,9 +126,9 @@ export function compter(taches: Tache[]): { total: number; faites: number; resta
 /**
  * Trie : les tâches à faire d'abord, puis les plus récentes en tête.
  *
- * PIÈGE : `sort` modifie le tableau SUR PLACE. L'appeler directement sur le
- * tableau reçu revient à muter l'état — le même problème que `push`, en plus
- * discret. Copie avant de trier.
+ * `[...taches]` avant `.sort()` : `sort` modifie le tableau SUR PLACE.
+ * L'appeler directement sur les props reviendrait à muter l'état du parent —
+ * le même problème que `push`, en plus discret.
  */
 export function trier(taches: Tache[]): Tache[] {
   throw new Error("À implémenter — étape 2");
