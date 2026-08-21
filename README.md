@@ -1,6 +1,6 @@
-# Étape 1 — L'état et les listes
+# Étape 2 — Les valeurs dérivées
 
-**8 tests sur 19 passent.** C'est normal : les 11 autres concernent l'étape 2.
+**Les 19 tests passent.** Toute la logique métier est écrite.
 
 ```bash
 npm run dev
@@ -9,31 +9,37 @@ npm test
 
 ## Ce qui marche
 
-Ajouter, cocher, supprimer. La liste vit.
+Tout, sauf la persistance. Filtres, compteur, tri, renommage, nettoyage des
+tâches terminées.
 
-## Ce qui ne marche pas encore
+## L'idée centrale
 
-Les filtres s'affichent mais ne filtrent rien (étape 2). Le renommage n'est pas
-branché (étape 2). Rien n'est enregistré : recharge la page et tout disparaît
-(étape 3).
+**Deux états seulement** : `taches` et `filtre`.
 
-## Les 3 idées de cette étape
+La liste affichée et le compteur ne sont pas des états — ce sont des **calculs**.
+Ils se recalculent à chaque rendu et ne peuvent donc jamais se désynchroniser.
 
-**L'immutabilité.** `push` modifie le tableau existant. React compare les
-références pour décider s'il refait le rendu : même référence, même écran.
-`[...taches, t]` crée un tableau neuf, donc une nouvelle référence.
+Le test le plus important du fichier de tests est celui-ci :
 
-**Les clés stables.** `key={tache.id}`, jamais `key={index}`. La clé dit à React
-quel composant correspond à quelle donnée. Avec l'index, supprimer un élément du
-milieu décale tout et React associe les composants aux mauvaises données.
+```ts
+it("ne modifie jamais la liste d'origine", () => {
+  filtrer(liste, "faites");
+  expect(liste).toHaveLength(3);
+});
+```
 
-**La logique hors des composants.** `App.tsx` ne sait pas *comment* on ajoute une
-tâche : il appelle `Taches.ajouter` et range le résultat. C'est ce qui permet
-aux tests de tourner sans navigateur.
+Il verrouille le bug de perte de données. Va voir `revue-de-code` pour observer
+ce qui arrive quand on ne respecte pas cette règle.
 
-## À vérifier avant de passer à l'étape 2
+## `reduce`, enfin utile
 
-- [ ] J'explique pourquoi `push` ne rafraîchit pas l'écran
-- [ ] J'explique ce que fait la prop `key` pour React
-- [ ] Je sais pourquoi `basculer` renvoie l'objet d'origine pour les tâches non concernées
-- [ ] Je comprends `setTaches(p => ...)` et pourquoi c'est préférable
+`compter` parcourt la liste une seule fois pour produire une valeur agrégée.
+C'est exactement le cas d'usage de `reduce` — pas « une boucle en plus
+compliqué », mais « réduire une liste à une valeur ».
+
+## À vérifier avant de passer à l'étape 3
+
+- [ ] J'explique pourquoi stocker la liste filtrée fait perdre des données
+- [ ] Je sais dire quand une valeur mérite un état, et quand elle doit être calculée
+- [ ] J'explique pourquoi `trier` copie le tableau avant d'appeler `sort`
+- [ ] Je sais dire à quoi sert `useMemo` — et pourquoi il ne sert à rien ici

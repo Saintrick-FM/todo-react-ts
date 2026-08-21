@@ -80,12 +80,14 @@ export function supprimer(taches: Tache[], id: string): Tache[] {
 
 /** Renomme une tâche. Un titre vide est ignoré plutôt que d'être enregistré. */
 export function renommer(taches: Tache[], id: string, titre: string): Tache[] {
-  throw new Error("À implémenter — étape 2");
+  const propre = titre.trim();
+  if (propre.length === 0) return taches;
+  return taches.map((t) => (t.id === id ? { ...t, titre: propre } : t));
 }
 
 /** Retire toutes les tâches terminées. */
 export function viderFaites(taches: Tache[]): Tache[] {
-  throw new Error("À implémenter — étape 2");
+  return taches.filter((t) => !t.faite);
 }
 
 /**
@@ -108,7 +110,16 @@ export function viderFaites(taches: Tache[]): Tache[] {
  * └───────────────────────────────────────────────────────────────────────┘
  */
 export function filtrer(taches: Tache[], filtre: Filtre): Tache[] {
-  throw new Error("À implémenter — étape 2");
+  switch (filtre) {
+    case "a-faire":
+      return taches.filter((t) => !t.faite);
+    case "faites":
+      return taches.filter((t) => t.faite);
+    case "toutes":
+      return taches;
+  }
+  // Pas de `default` : le type union `Filtre` garantit qu'on a traité tous les
+  // cas. Si tu ajoutes une valeur au type, TypeScript signalera ce switch.
 }
 
 /**
@@ -120,7 +131,12 @@ export function filtrer(taches: Tache[], filtre: Filtre): Tache[] {
  * réduire une liste à UNE valeur agrégée.
  */
 export function compter(taches: Tache[]): { total: number; faites: number; restantes: number } {
-  throw new Error("À implémenter — étape 2");
+  const faites = taches.reduce((somme, t) => somme + (t.faite ? 1 : 0), 0);
+  return {
+    total: taches.length,
+    faites,
+    restantes: taches.length - faites,
+  };
 }
 
 /**
@@ -131,5 +147,8 @@ export function compter(taches: Tache[]): { total: number; faites: number; resta
  * le même problème que `push`, en plus discret.
  */
 export function trier(taches: Tache[]): Tache[] {
-  throw new Error("À implémenter — étape 2");
+  return [...taches].sort((a, b) => {
+    if (a.faite !== b.faite) return a.faite ? 1 : -1;
+    return b.creeeLe.localeCompare(a.creeeLe);
+  });
 }
