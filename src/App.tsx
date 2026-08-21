@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useStockageLocal } from "./hooks/useStockageLocal";
 import FormulaireAjout from "./components/FormulaireAjout";
 import Filtres from "./components/Filtres";
 import ListeTaches from "./components/ListeTaches";
@@ -8,42 +9,79 @@ import * as Taches from "./lib/taches";
 import type { Filtre, Tache } from "./types";
 
 /* ==========================================================================
-   ÉTAPE 2 — LES VALEURS DÉRIVÉES
+   ÉTAPE 3 — LA PERSISTANCE
 
-   C'est l'étape la plus importante de l'atelier.
+   Les tâches survivent maintenant au rechargement de la page.
 
-   ┌─ LA RÈGLE ──────────────────────────────────────────────────────────┐
-   │ Une valeur qui peut se DÉDUIRE d'autres valeurs ne doit pas vivre   │
-   │ dans un état. On la recalcule pendant le rendu.                     │
-   └─────────────────────────────────────────────────────────────────────┘
+   Un seul changement par rapport à l'étape 2 : `useState` devient
+   `useStockageLocal`. Toute la mécanique — lecture initiale, écriture,
+   validation, gestion des erreurs — est enfermée dans ce hook.
 
-   Ici, deux états seulement : `taches` et `filtre`.
-   Tout le reste — la liste affichée, le nombre de tâches restantes — se
-   calcule à partir d'eux.
-
-   ┌─ CE QU'IL NE FAUT SURTOUT PAS FAIRE ────────────────────────────────┐
-   │   const [tachesVisibles, setTachesVisibles] = useState([]);         │
+   ┌─ CE QUE FAIT LE HOOK, ET POURQUOI ──────────────────────────────────┐
    │                                                                      │
-   │   function changerFiltre(f) {                                        │
-   │     setFiltre(f);                                                    │
-   │     setTachesVisibles(taches.filter(...));   // ← le piège           │
-   │   }                                                                  │
+   │ 1. INITIALISATION PARESSEUSE                                         │
+   │      useState(lire(...))        ← relit le stockage à CHAQUE rendu   │
+   │      useState(() => lire(...))  ← lit une seule fois, au montage     │
    │                                                                      │
-   │ Ça semble marcher. Puis :                                            │
-   │   1. on filtre sur « À faire » → `tachesVisibles` ne contient plus   │
-   │      que les tâches non faites ;                                     │
-   │   2. on ajoute une tâche à partir de cette liste amputée ;           │
-   │   3. les tâches terminées ont disparu. Définitivement.               │
+   │    Dans le premier cas React ignore la valeur après le premier       │
+   │    rendu, mais l'expression est quand même évaluée : lecture du      │
+   │    stockage + JSON.parse à chaque frappe au clavier.                 │
    │                                                                      │
-   │ Deux sources de vérité finissent toujours par diverger. Va voir la   │
-   │ branche `revue-de-code` : ce bug exact y est reproduit.              │
+   │ 2. UN useEffect POUR SYNCHRONISER                                    │
+   │    Un effet sert à mettre React en accord avec quelque chose         │
+   │    d'EXTÉRIEUR : ici le stockage du navigateur. C'est son rôle.      │
+   │                                                                      │
+   │    Il ne sert PAS à calculer une valeur dérivée de l'état — pour ça  │
+   │    on calcule pendant le rendu, comme `tachesVisibles` ci-dessous.   │
+   │    Lis « Vous n'avez peut-être pas besoin d'un Effet » sur react.dev.│
+   │                                                                      │
+   │ 3. LA VALIDATION À LA RELECTURE                                      │
+   │    On ne fait jamais confiance à ce qu'on relit : le contenu peut    │
+   │    être corrompu, ou écrit par une version précédente de l'appli.    │
+   │    Même principe qu'en semaine 4 avec Zod, côté serveur.             │
    └──────────────────────────────────────────────────────────────────────┘
+
+   Remarque : `taches` et `filtre` sont persistés séparément. Le filtre est une
+   préférence d'affichage, les tâches sont des données. Deux natures, deux clés.
+
    ========================================================================== */
 
+/* Les « gardes de type » : elles vérifient que ce qu'on relit du stockage a
+   bien la forme attendue. La signature `v is Tache[]` est un prédicat de type —
+   si la fonction renvoie true, TypeScript traite `v` comme un `Tache[]`.
+
+   À l'étape 4, ces deux fonctions déménageront dans le hook métier : elles
+   n'ont rien à faire dans un composant d'affichage. */
+function estTableauDeTaches(v: unknown): v is Tache[] {
+  return (
+    Array.isArray(v) &&
+    v.every(
+      (t) =>
+        typeof t === "object" &&
+        t !== null &&
+        typeof (t as Tache).id === "string" &&
+        typeof (t as Tache).titre === "string" &&
+        typeof (t as Tache).faite === "boolean"
+    )
+  );
+}
+
+function estFiltre(v: unknown): v is Filtre {
+  return v === "toutes" || v === "a-faire" || v === "faites";
+}
+
 export default function App() {
-  // Les deux SEULS états de l'application.
-  const [taches, setTaches] = useState<Tache[]>([]);
-  const [filtre, setFiltre] = useState<Filtre>("toutes");
+  // Les deux SEULS états — désormais persistés.
+  const [taches, setTaches] = useStockageLocal<Tache[]>(
+    "atelier.taches",
+    [],
+    estTableauDeTaches
+  );
+  const [filtre, setFiltre] = useStockageLocal<Filtre>(
+    "atelier.filtre",
+    "toutes",
+    estFiltre
+  );
 
   /* Valeurs DÉRIVÉES : recalculées à chaque rendu, jamais stockées.
      Elles ne peuvent pas se désynchroniser, puisqu'elles n'existent
@@ -68,7 +106,7 @@ export default function App() {
     <main className="app">
       <h1 className="app__titre">Mes tâches</h1>
       <p className="app__sous-titre">
-        Étape 2 : les filtres fonctionnent. Rien n'est encore enregistré.
+        Étape 3 : tout est enregistré dans ton navigateur. Recharge la page.
       </p>
 
       <FormulaireAjout
