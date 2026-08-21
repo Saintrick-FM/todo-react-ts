@@ -23,22 +23,9 @@ export default function ListeTaches({
 }: Props) {
   return (
     <ul className="liste">
-      {taches.map((tache) => (
-        /* ┌─ LA CLÉ ─────────────────────────────────────────────────────┐
-           │ key={tache.id} — un identifiant STABLE, propre à la donnée.  │
-           │                                                              │
-           │ key={index} est le piège classique. La clé sert à React pour │
-           │ savoir quel composant correspond à quelle donnée entre deux  │
-           │ rendus. Avec l'index, supprimer un élément du milieu décale  │
-           │ tout : React croit que l'élément n'a pas bougé, garde son    │
-           │ état interne et son DOM, et l'associe à une AUTRE donnée.    │
-           │                                                              │
-           │ Résultat visible : le texte d'une tâche s'affiche avec la    │
-           │ case cochée d'une autre. Essaie-le dans la branche           │
-           │ `02-a-reviser`, c'est spectaculaire.                         │
-           └──────────────────────────────────────────────────────────────┘ */
+      {taches.map((tache, index) => (
         <LigneTache
-          key={tache.id}
+          key={index}
           tache={tache}
           onBasculer={onBasculer}
           onSupprimer={onSupprimer}

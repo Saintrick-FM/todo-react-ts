@@ -1,81 +1,105 @@
+import { useEffect, useState } from "react";
 import FormulaireAjout from "./components/FormulaireAjout";
 import Filtres from "./components/Filtres";
 import ListeTaches from "./components/ListeTaches";
-import EtatVide from "./components/EtatVide";
 import Stats from "./components/Stats";
-import { useTaches } from "./hooks/useTaches";
+import type { Filtre, Tache } from "./types";
 
-/**
- * Le composant racine.
- *
- * Regarde sa taille : une soixantaine de lignes, dont l'essentiel est du JSX.
- * Il ne contient aucune règle métier, aucun appel au stockage, aucun calcul.
- * Il assemble, c'est tout.
- *
- * C'est le signe qu'un découpage fonctionne : le composant de plus haut niveau
- * se lit comme un plan de l'interface.
- */
-export default function App() {
-  const {
-    taches,
-    tachesVisibles,
-    filtre,
-    stats,
-    setFiltre,
-    ajouter,
-    basculer,
-    supprimer,
-    renommer,
-    viderFaites,
-  } = useTaches();
+const CLE = "atelier.taches";
 
-  /* Deux situations vides à distinguer — c'est un détail d'expérience
-     utilisateur qui fait la différence entre une démo et un produit :
-       • aucune tâche du tout → on invite à en créer une ;
-       • des tâches existent mais le filtre n'en laisse passer aucune →
-         on explique que c'est le filtre, pas un bug. */
-  const listeTotalementVide = taches.length === 0;
-  const filtreSansResultat = !listeTotalementVide && tachesVisibles.length === 0;
+function App() {
+  const [taches, setTaches] = useState<Tache[]>(
+    JSON.parse(localStorage.getItem(CLE) || "[]")
+  );
+  const [filtre, setFiltre] = useState<Filtre>("toutes");
+
+  useEffect(() => {
+    localStorage.setItem(CLE, JSON.stringify(taches));
+  });
+
+  const ajouterTache = (titre: string) => {
+    const nouvelle: Tache = {
+      id: String(taches.length + 1),
+      titre: titre,
+      faite: false,
+      creeeLe: new Date().toISOString(),
+    };
+    taches.push(nouvelle);
+    setTaches(taches);
+    localStorage.setItem(CLE, JSON.stringify(taches));
+  };
+
+  const changerFiltre = (nouveauFiltre: Filtre) => {
+    const toutes = JSON.parse(localStorage.getItem(CLE) || "[]") as Tache[];
+    setFiltre(nouveauFiltre);
+    if (nouveauFiltre === "a-faire") {
+      const resultat = toutes.filter((t) => t.faite === false);
+      console.log("filtre a-faire", resultat);
+      setTaches(resultat);
+    }
+    if (nouveauFiltre === "faites") {
+      const resultat = toutes.filter((t) => t.faite === true);
+      console.log("filtre faites", resultat);
+      setTaches(resultat);
+    }
+    if (nouveauFiltre === "toutes") {
+      setTaches(toutes);
+    }
+  };
+
+  const basculerTache = (id: string) => {
+    const toutes = JSON.parse(localStorage.getItem(CLE) || "[]") as Tache[];
+    const nouvelles = toutes.map((t) => {
+      if (t.id === id) {
+        t.faite = !t.faite;
+      }
+      return t;
+    });
+    localStorage.setItem(CLE, JSON.stringify(nouvelles));
+    setTaches(nouvelles);
+  };
+
+  const supprimerTache = (id: string) => {
+    const toutes = JSON.parse(localStorage.getItem(CLE) || "[]") as Tache[];
+    const nouvelles = toutes.filter((t) => t.id !== id);
+    console.log("apres suppression", JSON.stringify(nouvelles));
+    localStorage.setItem(CLE, JSON.stringify(nouvelles));
+    setTaches(nouvelles);
+  };
+
+  const renommerTache = (id: string, titre: string) => {
+    const nouvelles = taches.map((t) => (t.id === id ? { ...t, titre: titre } : t));
+    setTaches(nouvelles);
+  };
+
+  const viderFaites = () => {
+    const nouvelles = taches.filter((t) => t.faite !== true);
+    setTaches(nouvelles);
+  };
+
+  const nbFaites = taches.filter((t) => t.faite === true).length;
+  const nbRestantes = taches.filter((t) => t.faite === false).length;
 
   return (
-    // <main> plutôt qu'un <div> : la structure sémantique permet aux lecteurs
-    // d'écran de sauter directement au contenu principal.
     <main className="app">
       <h1 className="app__titre">Mes tâches</h1>
       <p className="app__sous-titre">
         Tout est enregistré dans ton navigateur. Recharge la page pour vérifier.
       </p>
 
-      <FormulaireAjout onAjouter={ajouter} />
+      <FormulaireAjout onAjouter={ajouterTache} />
+      <Filtres actif={filtre} onChanger={changerFiltre} />
 
-      <Filtres actif={filtre} onChanger={setFiltre} />
+      <ListeTaches
+        taches={taches}
+        onBasculer={basculerTache}
+        onSupprimer={supprimerTache}
+        onRenommer={renommerTache}
+      />
 
-      {listeTotalementVide ? (
-        <EtatVide
-          titre="Aucune tâche pour l'instant"
-          texte="Ajoute ta première tâche avec le champ ci-dessus."
-        />
-      ) : filtreSansResultat ? (
-        <EtatVide
-          titre="Rien à afficher avec ce filtre"
-          texte="Change de filtre pour voir tes autres tâches."
-        />
-      ) : (
-        <ListeTaches
-          taches={tachesVisibles}
-          onBasculer={basculer}
-          onSupprimer={supprimer}
-          onRenommer={renommer}
-        />
-      )}
-
-      {!listeTotalementVide && (
-        <Stats
-          restantes={stats.restantes}
-          faites={stats.faites}
-          onViderFaites={viderFaites}
-        />
-      )}
+      <Stats restantes={nbRestantes} faites={nbFaites} onViderFaites={viderFaites} />
     </main>
   );
 }
+
+export default App;
