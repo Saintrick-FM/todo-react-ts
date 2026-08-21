@@ -1,65 +1,55 @@
-# Étape 3 — La persistance
+# Étape 4 — Le hook métier
 
-**Les 19 tests passent.** Les tâches survivent maintenant au rechargement.
+**Les 19 tests passent.** L'architecture est en place.
 
 ```bash
-npm run dev     # ajoute des tâches, recharge la page
+npm run dev
 npm test
 ```
 
 ## Ce qui change
 
-Une seule ligne, en réalité : `useState` devient `useStockageLocal`.
+`App.tsx` passe de ~110 lignes à ~60, et surtout : il ne contient plus **aucune
+logique**. Compare :
 
-Toute la mécanique est enfermée dans `src/hooks/useStockageLocal.ts` — lecture
-initiale, écriture, validation, gestion des erreurs. `App.tsx` ne sait même pas
-qu'il y a un stockage derrière.
+```bash
+git diff etape-3-persistance etape-4-hook-personnalise -- src/App.tsx
+```
 
-C'est ça, un bon hook : il fait disparaître une complexité sans la déplacer
-ailleurs.
+Toute la mécanique a déménagé dans `src/hooks/useTaches.ts`. Le composant écrit
+maintenant une seule ligne :
 
-## Les trois pièges de cette étape
+```ts
+const { tachesVisibles, filtre, stats, ajouter, basculer, ... } = useTaches();
+```
 
-**L'initialisation paresseuse.** `useState(() => lire())` et non
-`useState(lire())`. Sans la fonction, l'expression est évaluée à chaque rendu —
-donc lecture du stockage et `JSON.parse` à chaque frappe au clavier.
+## Les trois couches
 
-**Le tableau de dépendances.** L'oublier fait tourner l'effet à chaque rendu. Y
-mettre une valeur recréée à chaque rendu (un objet, une fonction) crée une boucle
-infinie. Teste-le pour voir.
+```
+lib/taches.ts        LES RÈGLES      fonctions pures, zéro React, testables
+hooks/useTaches.ts   L'ÉTAT          état React, persistance, actions
+components/*         L'AFFICHAGE     aucune logique métier
+```
 
-**Le stockage peut échouer.** En navigation privée, quand le quota est plein, ou
-quand l'utilisateur bloque les données de site, chaque appel lève une exception.
-Un `getItem` non protégé dans un composant, et c'est la page blanche. D'où le
-`try/catch` dans `lib/stockage.ts`.
+Chaque couche peut changer sans toucher aux autres. Change le design : `lib/` ne
+bouge pas. Passe de `localStorage` à une base de données : les composants ne
+bougent pas.
 
-## À quoi sert `useEffect`
+C'est le découpage qu'on retrouve dans à peu près toute application sérieuse.
+Le vocabulaire varie, l'idée reste : **séparer ce qui décide de ce qui affiche**.
 
-À **synchroniser React avec quelque chose d'extérieur**. Ici, le stockage du
-navigateur. Plus tard : une connexion réseau, un abonnement, un minuteur.
+## Ce que ça t'apporte en entretien
 
-Il ne sert **pas** à calculer une valeur dérivée de l'état. `tachesVisibles` est
-calculé pendant le rendu, pas dans un effet. C'est la confusion la plus
-répandue chez les débutants en React, et elle produit du code impossible à
-suivre.
+Un junior sait faire marcher une TODO list. Ce qui distingue un candidat, c'est
+de pouvoir dire *pourquoi* le code est rangé ainsi — et ce qu'on gagne à le
+ranger autrement.
 
-À lire : [Vous n'avez peut-être pas besoin d'un
-Effet](https://fr.react.dev/learn/you-might-not-need-an-effect).
+Prépare une réponse de deux minutes à : « explique-moi l'architecture de ce
+projet ».
 
-## Une observation à faire
+## À vérifier avant la revue de code
 
-Ouvre les outils de développement, onglet Application → Local Storage.
-Regarde le contenu changer en direct pendant que tu coches des tâches.
-
-Puis pose-toi la question : que se passe-t-il si tu ouvres l'application sur
-ton téléphone ? Sur un autre navigateur ? Si tu vides ton cache ?
-
-Cette limite est exactement ce qui justifiera une vraie base de données en
-semaine 5. Tu viens de vivre le problème avant d'en apprendre la solution.
-
-## À vérifier avant de passer à l'étape 4
-
-- [ ] J'explique la différence entre `useState(lire())` et `useState(() => lire())`
-- [ ] Je sais ce que provoque un tableau de dépendances mal rempli
-- [ ] J'explique à quoi sert `useEffect`, et à quoi il ne sert pas
-- [ ] Je sais pourquoi on valide ce qu'on relit du stockage
+- [ ] Je nomme les trois couches et ce que chacune contient
+- [ ] J'explique pourquoi la logique métier ne vit pas dans les composants
+- [ ] Je sais dire ce qu'un hook personnalisé apporte concrètement
+- [ ] Je peux présenter cette architecture en deux minutes, sans notes
