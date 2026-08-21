@@ -1,0 +1,313 @@
+/* ==========================================================================
+   Feuille de style de l'atelier.
+   Elle est FOURNIE et TERMINÉE : tu n'as pas à y toucher.
+   Ton travail se situe uniquement dans la logique React (src/lib, src/hooks,
+   src/App.tsx). Les classes utilisées ici sont déjà posées dans les
+   composants de src/components.
+   ========================================================================== */
+
+:root {
+  --fond: #f6f7f9;
+  --surface: #ffffff;
+  --texte: #1a1d21;
+  --texte-doux: #6b7280;
+  --bordure: #e4e7eb;
+  --accent: #2563eb;
+  --accent-doux: #eff4ff;
+  --danger: #dc2626;
+  --succes: #16a34a;
+  --rayon: 10px;
+  --ombre: 0 1px 2px rgba(16, 24, 40, 0.05), 0 4px 12px rgba(16, 24, 40, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fond: #0f1115;
+    --surface: #171a21;
+    --texte: #e8eaed;
+    --texte-doux: #9aa2ad;
+    --bordure: #262a33;
+    --accent: #5b8cff;
+    --accent-doux: #1b2540;
+    --danger: #f87171;
+    --succes: #4ade80;
+    --ombre: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Anneau de focus visible partout : exigence d'accessibilité non négociable.
+   On ne supprime JAMAIS l'outline sans le remplacer. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 20px 80px;
+}
+
+.app__titre {
+  margin: 0 0 4px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.app__sous-titre {
+  margin: 0 0 28px;
+  color: var(--texte-doux);
+  font-size: 15px;
+}
+
+/* --- Formulaire d'ajout ---------------------------------------------------- */
+
+.formulaire {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.formulaire__champ {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 14px;
+  font: inherit;
+  color: var(--texte);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.formulaire__champ::placeholder {
+  color: var(--texte-doux);
+}
+
+.formulaire__erreur {
+  margin: -12px 0 20px;
+  color: var(--danger);
+  font-size: 14px;
+}
+
+/* --- Boutons --------------------------------------------------------------- */
+
+.bouton {
+  padding: 11px 18px;
+  font: inherit;
+  font-weight: 500;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid transparent;
+  border-radius: var(--rayon);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bouton:hover {
+  filter: brightness(1.08);
+}
+
+.bouton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bouton--discret {
+  color: var(--texte-doux);
+  background: transparent;
+  border-color: var(--bordure);
+}
+
+.bouton--discret:hover {
+  color: var(--texte);
+  background: var(--surface);
+}
+
+/* --- Filtres --------------------------------------------------------------- */
+
+.filtres {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.filtres__bouton {
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--texte-doux);
+  background: transparent;
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.filtres__bouton:hover {
+  color: var(--texte);
+}
+
+/* aria-pressed pilote le style : l'état visuel et l'état accessible ne peuvent
+   donc pas diverger. C'est volontaire — un piège classique évité. */
+.filtres__bouton[aria-pressed="true"] {
+  color: var(--accent);
+  background: var(--accent-doux);
+  border-color: var(--accent);
+  font-weight: 500;
+}
+
+/* --- Liste ----------------------------------------------------------------- */
+
+.liste {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+  overflow: hidden;
+}
+
+.tache {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--bordure);
+}
+
+.tache:last-child {
+  border-bottom: none;
+}
+
+.tache__case {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.tache__libelle {
+  flex: 1;
+  min-width: 0;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.tache__libelle--faite {
+  color: var(--texte-doux);
+  text-decoration: line-through;
+}
+
+.tache__champ {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  font: inherit;
+  color: var(--texte);
+  background: var(--fond);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+}
+
+.tache__actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.tache__action {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  font-size: 15px;
+  color: var(--texte-doux);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tache__action:hover {
+  color: var(--texte);
+  background: var(--fond);
+  border-color: var(--bordure);
+}
+
+.tache__action--danger:hover {
+  color: var(--danger);
+}
+
+/* --- États vides ----------------------------------------------------------- */
+
+.vide {
+  padding: 44px 20px;
+  text-align: center;
+  color: var(--texte-doux);
+  background: var(--surface);
+  border: 1px dashed var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.vide__titre {
+  margin: 0 0 4px;
+  font-weight: 500;
+  color: var(--texte);
+}
+
+.vide__texte {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* --- Pied de liste --------------------------------------------------------- */
+
+.stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  color: var(--texte-doux);
+  font-size: 14px;
+}
+
+.stats__compteur {
+  margin: 0;
+}
+
+/* --- Bandeau d'aide (branche boilerplate) ---------------------------------- */
+
+.aide {
+  margin-bottom: 24px;
+  padding: 14px 16px;
+  font-size: 14px;
+  background: var(--accent-doux);
+  border: 1px solid var(--accent);
+  border-radius: var(--rayon);
+}
+
+.aide__titre {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.aide p {
+  margin: 0;
+}

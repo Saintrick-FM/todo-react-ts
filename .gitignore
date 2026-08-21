@@ -1,0 +1,11 @@
+node_modules
+dist
+.DS_Store
+*.local
+.env
+.env.*
+!.env.example
+
+# Cache de compilation TypeScript : régénéré par `npm run build`.
+# Le versionner fait échouer `git switch` dès qu on a lancé un build.
+tsconfig.tsbuildinfo
